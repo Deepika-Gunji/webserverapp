@@ -1,0 +1,204 @@
+JSP MVC Demo - 2 (Employee)
+
+employee.jsp
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Future RedHats</title>
+</head>
+<body>
+<h2 align=center>JSP MVC Registration Demo</h2><hr color=red><hr color=red><br>
+<h3 align=center><u>Employee Registration (Insert)</u></h3>
+<center>
+<form method="post" action="insertemployee">
+Employee ID&nbsp;&nbsp;<input type="number" name="eid" required>
+<br><br>
+Employee Name&nbsp;&nbsp;<input type="text" name="ename" required>
+<br><br>
+Employee Gender&nbsp;&nbsp;
+Male<input type="radio" name="egender" value="male" required>
+Female<input type="radio" name="egender" value="female" required>
+<br><br>
+Employee Department&nbsp;&nbsp;
+<select name="edept" required>
+<option value="">--Select--</option>
+<option value="Sales">Sales</option>
+<option value="Marketing">Marketing</option>
+<option value="Development">Development</option>
+</select>
+<br><br>
+Employee Salary&nbsp;&nbsp;<input type="number" name="esalary" required><br><br>
+Employee Joining Date&nbsp;&nbsp;<input type="date" name="ejoindate" required><br><br>
+Employee Manager Status&nbsp;&nbsp;
+Yes<input type="radio" name="emanager" value="true" required>
+No<input type="radio" name="emanager" value="false" required>
+<br><br>
+<input type="submit" value="Insert">
+ </form>
+</center>
+</body>
+</html>
+
+InsertEmployeeServlet.java
+
+package com.klef.ep.services;
+
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+
+import com.klef.ep.dao.EmployeeDAO;
+import com.klef.ep.models.Employee;
+
+import java.io.*;
+import java.sql.*;
+
+@WebServlet("/insertemployee")
+public class InsertEmployeeServlet extends HttpServlet
+{
+	public void service(HttpServletRequest request,HttpServletResponse response) throws ServletException,IOException
+	{
+		response.setContentType("text/html");
+		int id=Integer.parseInt(request.getParameter("eid"));
+		String name=request.getParameter("ename");
+		String gender=request.getParameter("egender");
+		String dept=request.getParameter("edept");
+		Double salary=Double.parseDouble(request.getParameter("esalary"));
+		String joindate=request.getParameter("ejoindate");
+		boolean managerstatus=Boolean.parseBoolean(request.getParameter("emanager"));
+		
+		Employee emp=new Employee();
+		emp.setEmpid(id);
+		emp.setEmpname(name);
+		emp.setEmpgender(gender);
+		emp.setEmpdepartment(dept);
+		emp.setEmpsalary(salary);
+		emp.setEmpjoiningdate(joindate);
+		emp.setEmpmanager(managerstatus);
+		
+		EmployeeDAO empdao=new EmployeeDAO();
+		int result=empdao.insertEmployee(emp);
+		request.setAttribute("result", result);
+		request.setAttribute("employee", emp);
+		if(result>0)
+		{
+			RequestDispatcher rd=request.getRequestDispatcher("success.jsp");
+			rd.forward(request, response);
+		}
+	}
+}
+
+Employee.java
+
+package com.klef.ep.models;
+
+
+public class Employee 
+{
+   private int empid;
+   private String empname;
+   private String empgender;
+   private String empdepartment;
+   public String getEmpdepartment() {
+	return empdepartment;
+}
+public void setEmpdepartment(String empdepartment) {
+	this.empdepartment = empdepartment;
+}
+private Double empsalary;
+   private String empjoiningdate;
+   private boolean empmanager;
+   
+   public int getEmpid() {
+	return empid;
+}
+public void setEmpid(int empid) {
+	this.empid = empid;
+}
+public String getEmpname() {
+	return empname;
+}
+public void setEmpname(String empname) {
+	this.empname = empname;
+}
+public String getEmpgender() {
+	return empgender;
+}
+public void setEmpgender(String empgender) {
+	this.empgender = empgender;
+}
+public Double getEmpsalary() {
+	return empsalary;
+}
+public void setEmpsalary(Double empsalary) {
+	this.empsalary = empsalary;
+}
+public String getEmpjoiningdate() {
+	return empjoiningdate;
+}
+public void setEmpjoiningdate(String empjoiningdate) {
+	this.empjoiningdate = empjoiningdate;
+}
+public boolean isEmpmanager() {
+	return empmanager;
+}
+public void setEmpmanager(boolean empmanager) {
+	this.empmanager = empmanager;
+}
+
+}
+
+
+EmployeeDAO.java
+
+package com.klef.ep.dao;
+import java.sql.*;
+
+import com.klef.ep.models.Employee;
+
+public class EmployeeDAO 
+{
+	public int insertEmployee(Employee emp)
+	{
+		int n=0;
+		try
+		{
+			Connection con=DBConnection.getConnection();
+			PreparedStatement pstmt=con.prepareStatement("insert into employee values(?,?,?,?,?,?,?)");
+			pstmt.setInt(1, emp.getEmpid());
+			pstmt.setString(2,emp.getEmpname());
+			pstmt.setString(3, emp.getEmpgender());
+			pstmt.setString(4, emp.getEmpdepartment());
+			pstmt.setDouble(5, emp.getEmpsalary());
+			pstmt.setString(6, emp.getEmpjoiningdate());
+			pstmt.setBoolean(7, emp.isEmpmanager());
+			n=pstmt.executeUpdate();
+		}
+		catch(Exception e)
+		{
+			System.out.println(e);
+		}
+		return n;
+	}
+}
+
+
+success.jsp
+
+<%@ page import="com.klef.ep.models.Employee"%>
+<%
+int result = (int)request.getAttribute("result");
+Employee emp = (Employee)request.getAttribute("employee");
+
+if(result>0)
+{
+	%>
+	<h3>Employee record inserted succesfully</h3><br>
+	Welcome&nbsp;<i><%=emp.getEmpname()%></i>
+	<%
+}
+
+
+%>
